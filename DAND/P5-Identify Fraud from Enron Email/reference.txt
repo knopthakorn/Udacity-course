@@ -1,0 +1,10 @@
+http://scikit-learn.org/stable/documentation.html
+https://en.wikipedia.org/wiki/Enron
+http://www.analyticsvidhya.com/learning-paths-data-science-business-analytics-business-intelligence-big-data/learning-path-data-science-python/
+https://en.wikipedia.org/wiki/Random_forest
+https://www.kaggle.com/c/titanic/details/getting-started-with-random-forests
+https://www.cs.cmu.edu/~./enron/
+https://github.com/udacity/ud120-projects
+http://openclassroom.stanford.edu/MainFolder/CoursePage.php?course=MachineLearning
+https://azure.microsoft.com/en-us/documentation/articles/machine-learning-algorithm-choice/
+https://www.quora.com/Whats-data-leakage-in-data-science

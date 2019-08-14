@@ -1,0 +1,144 @@
+
+/* Document styling */
+svg {
+  font-family: helvetica, sans-serif;
+  font-size: 12px;
+}
+
+
+body {
+  background-color: #fff;
+  font-family: helvetica, sans-serif;
+  font-size: 14px;
+}
+
+#wrapper {
+  width: 1000px;
+  left: 50px;
+  position: relative;
+}
+
+#chart {
+  position: absolute;
+  top: 120px;
+  width: 1000px;
+  margin: 0 auto;
+}
+
+#title {
+  position: absolute;
+  top: 40px;
+  left: 150px;
+  font-family: helvetica, sans-serif;
+  font-size: 14px;
+}
+
+#summary {
+  position: absolute;
+  top: 80px;
+  left: 150px;
+  width: 800px;
+  font-family: helvetica, sans-serif;
+  font-size: 12px;
+}
+
+#about {
+  position: absolute;
+  top: 620px;
+  left: 150px;
+  width: 1000px;
+  font-size:12px
+}
+
+
+#tooltip {
+        position: absolute;
+        width: 200px;
+        height: auto;
+        padding: 10px;
+        background-color: rgba(0, 0, 0, 0.7);
+        -webkit-border-radius: 10px;
+        -moz-border-radius: 10px;
+        border-radius: 10px;
+        -webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+        -moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+        box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+        pointer-events: none;
+}
+
+#tooltip.hidden {
+        display: none;
+}
+
+#tooltip p {
+    color:#eee;
+        margin: 0;
+        font-family: sans-serif;
+        font-size: 14px;
+        line-height: 20px;
+}
+
+.background path {
+  fill: none;
+  stroke: none;
+  stroke-width: 20px;
+  pointer-events: stroke;
+}
+
+.foreground path {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 1.5px;
+}
+
+.axis .title {
+  font-size: 10px;
+}
+
+.axis line,
+.axis path {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.axis.string {
+  font-size: 12px;
+}
+
+.label {
+  -webkit-transition: fill 125ms linear;
+}
+
+.active .label:not(.inactive) {
+  font-weight: bold;
+  font-size: 10px;
+}
+
+.label.inactive {
+  fill: #ccc;
+}
+
+.foreground path.inactive {
+  stroke: #ccc;
+  stroke-opacity: .1;
+  stroke-width: 1px;
+}
+
+
+/*
+
+.tooltip {
+
+background-color: rgba(220,220,220,0.5);
+color: #333;
+          margin: 10px;
+          height: 25px;
+          padding-right: 10px;
+          padding-left: 10px;
+          padding-top: 10px;
+    -webkit-border-radius:10px;
+    -moz-border-radius:10px;
+    border-radius:10px;
+}
+*/

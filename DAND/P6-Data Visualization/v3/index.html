@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+      <title>Udacity Project 6 :PISA 2012</title>
+      <link rel="stylesheet" href="css/style.css">
+  </head>
+
+  <body>
+    <div id="wrapper">
+
+
+      <div id="finding">
+        <p>What is PISA?</p>
+      </div>
+
+      <div id="findingSummary">
+        <p>PISA is a measure of f 15-year-olds students' ability to use their reading, maths and science skills and knowledge to meet the real-life world.</p>
+      </div>
+
+      <div id="navigation">
+        <div id="prev"></div>
+        <div id="next"></div>
+        <div id="home"></div>
+      </div>
+
+
+      <div id="chart">
+        <div id="introview">
+            <div id="info"></div>
+            <div id="plot1"></div>
+            <div id="plot2"></div>
+            <div id="info2"></div>
+            <div id="info3"></div>
+            <div id="plot3"></div>
+        </div>
+        <div id="analyze" class="hidden"></div>
+        <div id="customize" class="hidden">
+            <div id="cinfo"></div>
+            <div id="sep1" class="hidden"></div>
+            <div id="cplot1"></div>
+            <div id="sep2" class="hidden"></div>
+            <div id="cplot2"></div>
+            <div id="cplot3"></div>
+        </div>
+        </div>
+      </div>
+
+      <div id="scoreaxis" class="hidden">
+        <p><strong>Achievement:</strong><p>
+        <ul id="yaxisitems"></ul>
+      </div>
+
+      <div id="countrylist"  class="hidden">
+        <div id="list"></div>
+      </div>
+
+      <div id="tooltip" class="hidden">
+        <p><strong><span id="country">X</span></strong></p>
+        <p><span id="y">y</span></p>
+        <p><span id="x">x</span></p>
+      </div>
+
+    </div>
+
+
+    <script src="js/d3.v3.min.js"></script>
+    <script src="js/d3-legend.min.js"></script>
+    <script src="js/d3.geo.projection.v1.min.js"></script>
+    <script src="js/topojson.v1.min.js"></script>
+    <script src="js/datamaps.world.min.js?v=1"></script>
+    <script src="js/underscore-min.js"></script>
+    <script src="js/pisa.js"></script>
+
+  </body>
+</html>

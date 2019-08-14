@@ -1,0 +1,320 @@
+/* Document styling */
+body {
+  background-color: #fff;
+  font-family: helvetica;
+  font-weight: 100;
+  font-size: 12px;
+}
+
+#wrapper {
+  width: 100%;
+  margin: 0 auto;
+  position: relative;
+}
+
+#finding {
+  position: absolute;
+  top: 0px;
+  left: 209px;
+  font-size: 30px;
+  font-weight: bold;
+  letter-spacing: -2px;
+  line-height: 100%;
+}
+
+#findingSummary {
+  position: absolute;
+  top: 60px;
+  left: 210px;
+  width: 740px;
+  font-size: 16px;
+}
+
+#navigation {
+  position: absolute;
+  top: 35px;
+  left: 850px;
+  width: 240px;
+}
+
+#navigation #prev {
+  float: left;
+  width: 24px;
+  height: 24px;
+  background-image:url("../images/prev_light.png");
+
+}
+
+#navigation #next {
+  float: left;
+  width: 24px;
+  height: 24px;
+  margin-left:10px;
+  background-image:url("../images/next.png");
+}
+
+#navigation #home {
+  float: left;
+  width: 24px;
+  height: 24px;
+  margin-left: 10px;
+  background-image:url("../images/home.png");
+}
+
+#chart {
+  position: absolute;
+  top: 80px;
+  left: 130px;
+  width: 900px;
+  height: 700px;
+  /*margin: 25px auto;*/
+}
+
+
+#intro {
+  position: absolute;
+  margin-left: 80px;
+  top: 50px;
+  width: 800px;
+}
+
+#intro #info {
+  float: left;
+  width: 200px;
+  height: 200px;
+  font-size: 16px;
+}
+
+#intro #info2 {
+  float: left;
+  width: 450px;
+  height: 50px;
+}
+
+#intro #info3 {
+  float: left;
+  width: 350px;
+  height: 50px;
+}
+
+#intro #sep1 {
+  float: left;
+  width: 20px;
+  height: 200px;
+}
+#intro #plot1 {
+  float: left;
+  width: 200px;
+  height: 200px;
+}
+#intro #sep2 {
+  float: left;
+  width: 80px;
+  height: 200px;
+}
+#intro #plot2 {
+  float: left;
+  width: 200px;
+  height: 200px;
+}
+#intro #plot3 {
+  float: overlay;
+  margin-top: 240px;
+  width: 800px;
+  height: 300px;
+}
+
+#intro.hidden {
+  visibility: hidden;
+}
+
+#analyze {
+  position: absolute;
+  width: 1000px;
+  height: 700px;
+}
+
+#analyze.hidden {
+  visibility: hidden;
+}
+
+
+#customize {
+  position: absolute;
+  margin-left: 80px;
+  width: 900px;
+}
+
+#customize #cinfo {
+  top: 50px;
+  width: 900px;
+  height: 80px;
+}
+
+#customize #sep1 {
+  float: left;
+  width: 200px;
+  height: 200px;
+  left : 200px
+}
+#customize #sep2 {
+  float: left;
+  width: 100px;
+  height: 200px;
+}
+
+#customize #cplot1 {
+  float: left;
+  width: 220px;
+  height: 200px;
+}
+
+#customize #cplot2{
+  float: left;
+  width: 200px;
+  height: 200px;
+}
+
+#customize #cplot3 {
+  float: left;
+  width: 900px;
+  height: 500px;
+}
+
+#customize.hidden {
+  visibility: hidden;
+}
+
+#scoreaxis {
+  position: absolute;
+  top: 160px;
+  left: 120px;
+  width: 120px;
+}
+#scoreaxis.hidden {
+  visibility: hidden;
+}
+
+#countrylist {
+  position: absolute;
+  top: 80px;
+  left: 350px;
+
+}
+#countrylist #list {
+  margin-left:90px;
+}
+
+#countrylist.hidden {
+  display: none;
+}
+
+
+#tooltip {
+        position: absolute;
+        width: 200px;
+        height: auto;
+        padding: 10px;
+        background-color: rgba(0, 0, 0, 0.5);
+        -webkit-border-radius: 10px;
+        -moz-border-radius: 10px;
+        border-radius: 10px;
+        -webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+        -moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+        box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+        pointer-events: none;
+}
+
+#tooltip.hidden {
+        display: none;
+}
+
+#tooltip p {
+        color:#eee;
+        margin: 0;
+        font-family: helvetica;
+        font-size: 12px;
+        line-height: 20px;
+}
+
+
+li, h1, h2 {
+  font-weight: 100;
+}
+
+h2 {
+  font-size: 11px;
+  margin: 0;
+  color: #666;
+}
+
+ul {
+  list-style: none;
+  font-size: 12px;
+  padding: 0;
+  margin-top: 3px;
+}
+
+li {
+  cursor: pointer;
+  padding-bottom: 5px;
+}
+
+li:hover {
+  color: #06C;
+  font-weight: bold;
+}
+
+li.preview {
+  font-weight: 400;
+}
+
+li.selected {
+  font-weight: bold;
+}
+
+select {
+    padding:5px;
+    margin: -2px;
+    -webkit-border-radius:4px;
+    -moz-border-radius:4px;
+    border-radius:4px;
+    background: #ddd;
+    font-size: 14px;
+    color:#333;
+    border:none;
+    outline:none;
+    display: inline-block;
+    -webkit-appearance:none;
+    -moz-appearance:none;
+    appearance:none;
+    cursor:pointer;
+}
+
+/* SVG styling */
+svg {
+  font-family: helvetica;
+}
+
+path {
+  /* fill: #CED8B6; */
+
+  stroke: #555;
+}
+
+line {
+  stroke: #555;
+  stroke-width: 2px;
+}
+
+#xAxis path, #yAxis path, #xAxis line, #yAxis line {
+  stroke: #ccc;
+  fill: none;
+  shape-rendering: crispEdges;
+}
+
+text {
+  fill: #888;
+}
+
+

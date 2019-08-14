@@ -1,0 +1,1692 @@
+---
+title: "P4 Explore and Summarize Prosper Loan Data"
+author: 
+- Nopthakorn Kutawan
+- Udacity Data Analyst Nanodegree 
+date: "January 23, 2016"
+output: 
+  html_document: 
+    fig_height: 7
+    fig_width: 9
+    toc: yes
+---
+========================================================
+
+# Introduction
+
+Data soruce : [Prosper Loan data](https://s3.amazonaws.com/udacity-hosted-downloads/ud651/prosperLoanData.csv)
+
+I choose to explore dataset of the "Loan data from prosper", from Prosper.com
+Prosper is a peer-to-peer lending marketplace. Borrowers make loan requests and investors contribute  the loans of their choice.
+Once the process is complete, borrowers make fixed monthly payments and investors receive a portion of those payments directly to their Prosper account.
+I am interested to explore which factor will yield effectiveness benefit for the borrowers and the lender.
+
+```{r global_options, include = FALSE}
+## global knitr chunks
+
+# clear namespace
+rm(list=ls())
+
+# opts_chunk
+library(knitr)
+
+opts_chunk$set(fig.width  = 12, 
+               fig.height = 8, 
+               fig.path   ='Figs/',
+               echo       = FALSE, 
+               warning    = FALSE, 
+               message    = FALSE)
+```
+
+```{r Installing_and_loading_required_packages}
+#Installing and loading required packages
+# opts_chunk
+library(knitr)
+
+# select, filter, arrange, group_by, summarize, mutate, rename functions
+library(dplyr)
+
+# qplot, ggplot
+library(ggplot2)
+
+# extra geoms, scales, and themes
+library(ggthemes)
+
+# grid.arrange
+library(gridExtra)
+
+# ymd_hms
+library(lubridate)
+   
+# separate, unite
+library(tidyr)
+   
+# interactive maps 
+library(rMaps)
+   
+# color schemes for maps
+library(RColorBrewer)
+   
+# melt and dcast
+library(reshape2)
+   
+# use minimalistic theme with no background
+theme_set(theme_minimal(12))
+
+```
+
+```{r Load_Data}
+# Set working directory
+setwd("/Users/Slimn/Desktop/Work/Project/Udacity/NanoDegree/P4/ProjectSubmitted/")
+
+# Check working directory has been correctly
+#getwd()
+# Load ata
+pdf <- read.csv("prosperLoanData.csv", 
+                header = TRUE)
+# Converting it to a tbl_df object
+pdf <- tbl_df(pdf)
+```
+
+
+```{r plot_helper}
+## create helper plot function
+
+## simple bar plot helper function
+# param:
+#       df    : dataset
+#       x     : data to plot
+#       xlab  : x axis labell
+#       ylab  : y axis label
+#       title : plot title
+#       angle : x axis tick align angle
+# return plot object
+barplot <-function(df, 
+                   x, 
+                   xlab, 
+                   ylab, 
+                   title, 
+                   angle) 
+{
+  p <-ggplot(data = df,
+             aes(x = x)) + 
+    geom_bar(color    = "black") +
+    theme(axis.text.x = element_text(angle = angle)) +
+    xlab(xlab) +
+    ylab(ylab) +
+    ggtitle(title)
+  return(p)
+}
+
+
+## simple histogram plot helper function
+# param:
+#       df    : dataset
+#       x     : data to plot
+#       bin   : bin width
+#       xlab  : x axis labell
+#       ylab  : y axis label
+#       title : plot title
+#       angle : x axis tick align angle
+# return plot object
+hisplot <-function(df, 
+                   x, 
+                   bin, 
+                   xlab, 
+                   ylab, 
+                   title, 
+                   angle) 
+{
+  p <-ggplot(data = df,
+             aes(x = x)) + 
+    geom_histogram(binwidth = bin, 
+                   color    = "black") +
+    theme(axis.text.x = element_text(angle = angle)) +
+    xlab(xlab) +
+    ylab(ylab) +
+    ggtitle(title)
+  return(p)
+}
+
+# simple ecf plot helper function
+# param:
+#       df    : dataset
+#       x     : data to plot
+#       title : plot title
+# return plot object
+ecfplot <-function(df, 
+                   x, 
+                   color,  
+                   title) 
+{
+  p <-ggplot(data = df,
+             aes(x = x)) + 
+    stat_ecdf(color = color)+
+    ggtitle(title)
+  return(p)
+}
+
+
+## simple binplot helper function
+# param:
+#       df    : dataset
+#       x     : x data to plot
+#       y     : y data to plot
+#       xlab  : x axis labell
+#       ylab  : y axis label
+#       title : plot title
+#       angle : x axis tick align angle
+# return: plot object
+
+binplot <-function(df, 
+                   x, 
+                   y, 
+                   xlab, 
+                   ylab, 
+                   title, 
+                   angle) 
+{
+  p <-ggplot(data = df,
+             aes(x = x, 
+                 y = y)) + 
+    stat_bin2d() +
+    theme(axis.text.x = element_text(angle = angle)) +
+    xlab(xlab) +
+    ylab(ylab) +
+    ggtitle(title)
+  return(p)
+}
+
+
+## simple boxplot helper function
+# param:
+#       df    : dataset
+#       x     : x data to plot
+#       y     : y data to plot
+#       fil   : boc fill color
+#       gd    : legend guide
+#       xlab  : x axis labell
+#       ylab  : y axis label
+#       title : plot title
+#       angle : x axis tick align angle
+# return: plot object
+
+boxplot <-function(df, 
+                   x, 
+                   y, 
+                   fil, 
+                   gd, 
+                   xlab, 
+                   ylab, 
+                   title, 
+                   angle) 
+{
+  p <-ggplot(data = df,
+             aes(x = x, 
+                 y = y,
+                 color = x)) + 
+    geom_boxplot(fill = fil) +
+    guides(colour = gd) +
+    theme(axis.text.x = element_text(angle = angle)) +
+    xlab(xlab) +
+    ylab(ylab) +
+    ggtitle(title)
+  return(p)
+}
+
+## simple jitterplot helper function
+# param:
+#       df    : dataset
+#       x     : x data to plot
+#       y     : y data to plot
+#       al    : alpha scale
+#       col   : box color
+#       xlab  : x axis labell
+#       ylab  : y axis label
+#       title : plot title
+#       angle : x axis tick align angle
+# return: plot object
+
+jitterplot <-function(df, 
+                    x, 
+                    y,
+                    al,
+                    col, 
+                    xlab, 
+                    ylab, 
+                    title, 
+                    angle) 
+{
+  p <-ggplot(data = df,
+             aes(x = x,
+                 y = y)) +
+    geom_jitter(alpha = al, 
+              position = 'jitter', 
+              color = col) +
+    theme(axis.text.x = element_text(angle = angle)) +
+    xlab(xlab) +
+    ylab(ylab) +
+    ggtitle(title)
+  return(p)
+}
+
+
+## multi variable bar plot helper function
+# param:
+#       df    : dataset
+#       x     : x data to plot
+#       y     : y data to plot
+#       legend: fill color
+#       xlab  : x axis labell
+#       ylab  : y axis label
+#       title : plot title
+#       angle : x axis tick align angle
+# return plot object
+multibarplot <-function(df, 
+                        x, 
+                        y, 
+                        legend,
+                        xlab, 
+                        ylab, 
+                        title, 
+                        angle) 
+{
+  p <-ggplot(data = df, 
+             aes(x = x,
+                 y = y,
+                 fill = legend)) + 
+    geom_bar(stat = 'identity') +
+    theme(axis.text.x = element_text(angle = angle)) +
+    xlab(xlab) +
+    ylab(ylab) +
+    ggtitle(title)
+  return(p)
+}
+
+## plot information helper
+# boxplot fill color
+fil <- 'NA'
+# legend guild
+gd <- FALSE
+# jitter color
+col <- "steelblue3"
+# jitter plot alpha value
+alpha <- 0.1
+```
+
+------
+
+# Overview of the data
+
+```{r Data_Overivew}
+# Retrieve the dimention
+dim(pdf)
+
+# Look at the structure
+str(pdf)
+```
+
+```{r Data_Cleaning}
+## Data Cleaning
+
+# Loan ListingCategory
+ListingLable <- c("Not Available",
+                  "Debt Consolidation",
+                  "Home Improvement",
+                  "Business",
+                  "Personal Loan",
+                  "Student Use",
+                  "Auto",
+                  "Other",
+                  "Baby&Adoption",
+                  "Boat",
+                  "Cosmetic Procedure",
+                  "Engagement Ring",
+                  "Green Loans",
+                  "Household Expenses",
+                  "Large Purchases",
+                  "Medical/Dental",
+                  "Motorcycle",
+                  "RV",
+                  "Taxes",
+                  "Vacation",
+                  "Wedding Loans")
+
+IncomeLabel <-  c("Not displayed",
+                  "Not employed",
+                  "$0",
+                  "$1-24,999",
+                  "$25,000-49,999",
+                  "$50,000-74,999",
+                  "$75,000-99,999",
+                  "$100,000+")
+
+CreditLabel <- c("AA",
+                 "A",
+                 "B",
+                 "C",
+                 "D",
+                 "E",
+                 "HR",
+                 "NC", 
+                 "NA")
+
+# create variable LoanCategory
+# map ListingCategory from numeric to alpha
+pdf$LoanCategory <- factor(pdf$ListingCategory, 
+                                  levels = seq(0:20),
+                                  labels = ListingLable)
+
+# create variable BorrowerIncomeRange
+pdf$BorrowerIncomeRange <- ordered(pdf$IncomeRange, 
+                                  levels = IncomeLabel)
+
+# create variable PeriodOfLoanByYear
+# format year only
+pdf$PeriodOfLoan = format(as.Date(pdf$LoanOriginationDate, 
+                                         format = "%Y-%m-%d"),"%Y")
+
+# create variable CreditRange
+# combine credit score into one variable
+pdf <- pdf %>% 
+  mutate(CreditScoreRange = (CreditScoreRangeLower * 0.5) + 
+           (CreditScoreRangeUpper * 0.5))
+
+# create variable PeriodOfLoanQuarter
+# move year before Q name
+pdf$QuarterPeriodOfLoan <- as.character(pdf$LoanOriginationQuarter)
+pdf <- pdf %>% 
+  separate(col  = QuarterPeriodOfLoan, 
+           into = c("Quarters", "Year"), 
+           sep  = " ") %>%
+  unite(col = QuarterPeriodOfLoan, 
+        Year, 
+        Quarters, 
+        sep = " ")
+
+
+# Rename variables within parentheses
+pdf <- pdf %>% rename(ProsperRatingScore = ProsperRating..numeric.)
+pdf <- pdf %>% rename(CreditRating = ProsperRating..Alpha.)
+# reorder
+pdf$CreditRating <- ordered(pdf$CreditRating,
+                                   levels = CreditLabel)
+
+# create variable ProsperRiskScore
+pdf$ProsperRiskScore = factor(pdf$ProsperScore)
+
+# create term of loan by factor the Term
+pdf$TermInMonth <- as.factor(pdf$Term)
+
+```
+
+```{r remove_na_from_data}
+# remove missing value from datatset
+
+# LoanCategory without NA
+Category_no_na <- subset(pdf, 
+                         !is.na(LoanCategory))
+
+# exclude Not Available from dataset
+Category_exc_na <- subset(pdf, 
+                          !(LoanCategory == "Not Available"))
+
+# include only Not Available from dataset
+Category_only_na <- subset(pdf, 
+                           (LoanCategory == "Not Available"))
+
+# DebtToIncomeRatio without NA
+DTIR_no_na <- subset(pdf, 
+                     !is.na(DebtToIncomeRatio))
+
+# CreditRating without NA
+CRating_no_na <- subset(pdf, 
+                        !is.na(CreditRating))
+```
+
+------
+
+# Univariate Plots Section
+
+I will begin by explore the trend of loan on prosper.com since originated.
+
+
+### Period time of loan
+
+```{r Period_time_of_loan}
+#plot the number of loan by year of originated
+
+# prepare plot label and title
+xlb1 <- 'Loan Originated'
+ylb1 <- 'Number of Loan'
+til1 <- "Number of Loan', 'Prosper loan originated through FY2014"
+
+# create barplot
+barplot(pdf,
+        pdf$PeriodOfLoan, 
+        xlb1, 
+        ylb1, 
+        til1,
+        0)
+```
+
+The Propser loans had two timing period.The first period from 2005/Q4 to July 2008/Q4, the second period start from 2009/Q2 to 2014/Q1
+In 2009/Q1 they were enters a ‘quiet period’ while seeking regulatory approvals by SEC
+The loans had rising trend Y-Y.
+
+
+### Loan Category
+
+Take an look which kind of loan purpose
+
+```{r Loan_Category}
+# plot the list of loan category
+
+# prepare plot label and title
+xlb1 <- 'Loan Category'
+ylb1 <- 'Number of Loan'
+til1 <- "Prosper Loan Category exclude 'Not Available'"
+til2 <- "Prosper Loan Category of 'Not Available'"
+
+# create barplot
+p1 <-barplot(Category_exc_na, 
+             Category_exc_na$LoanCategory, 
+             xlb1, 
+             ylb1, 
+             til1, 
+             -90)
+p2 <-barplot(Category_only_na, 
+             Category_only_na$LoanCategory, 
+             xlb1, 
+             ylb1, 
+             til2, 
+             -90)
+
+# summary plot
+grid.arrange(p1, 
+             p2, 
+             ncol = 1)
+
+#descriptive statistics
+summary(pdf$LoanCategory)
+```
+
+The loan with "Not Available" had near by 60k listing on prosper.com
+If consider loan type excluding "Not Available" the top three of loan are for "Auto", "Debt Consolidation" and "Home Improvement" respectively.
+
+
+### The Interest and return
+
+Next, see the Borrower's interest rate on the loan. 
+
+```{r Interest_and_Return}
+# plot the interest rate
+
+# prepare plot label and title
+xlb1 <- 'BorrowerRate'
+xlb2 <- 'Estimate Lender yield'
+ylb1 <- 'Number of Loan'
+til1 <- 'Distribution of The BorrowerRate'
+til2 <- 'Distribution of The EstimatedEffectiveYield'
+
+# set binwidth
+binwidth <- 0.01
+
+#create histogram
+p1 <-hisplot(pdf, 
+             pdf$BorrowerRate, 
+             binwidth, 
+             xlb1, 
+             ylb1, 
+             til1, 
+             0) 
+
+p2 <-hisplot(pdf, 
+             pdf$EstimatedEffectiveYield,
+             binwidth, 
+             xlb2, 
+             ylb1, 
+             til2, 
+             0) 
+
+# summary plot
+grid.arrange(p1, 
+             p2, 
+             ncol = 2)
+```
+
+BorrowerRate are approximately normally distributed with mean and median are 0.19 and 0.18 respectively.
+EstimatedEffectiveYield also approximately normally distributed and look seem identical with BorrowerRate.
+
+
+### Summary of BorrowerRate
+
+```{r Summary_of_BorrowerRate}
+#descriptive statistics
+summary(pdf$BorrowerRate)
+```
+
+
+### Summary of LenderYield
+How much return yield of the Lender for their funded.
+```{r Summary_of_LenderYield}
+#descriptive statistics
+summary(pdf$LenderYield)
+```
+
+
+### Term of loan
+
+Which available terms for loans
+
+```{r Term_of_Loan}
+#plot the term of loan
+
+# prepare plot label and title
+xlb1 <- 'Term in months'
+ylb1 <- 'Number of Loan'
+til1 <- 'The length of loan expressed in months'
+
+# create barplot
+barplot(pdf, 
+        pdf$TermInMonth, 
+        xlb1, 
+        ylb1, 
+        til1, 
+        0)
+
+#descriptive statistics
+summary(pdf$TermInMonth)
+```
+
+The term of loan have 12/36/60 months lenght, and the lenght 36 month is most popular choice.
+
+
+### Amount Of Loan
+
+Check which amount of loan of prosper.com
+
+```{r Amount_Of_Loan}
+#plot the term of loan
+
+# prepare plot label and title
+xlb1 <- 'Amount of Loans($)'
+ylb1 <- 'Number of Loan'
+til1 <- 'Ditribution of Loans Amount'
+
+# set binwidth
+binwidth <- 750
+
+#create histogram
+hisplot(pdf,
+        pdf$LoanOriginalAmount, 
+        binwidth, 
+        xlb1, 
+        ylb1, 
+        til1, 
+        0) 
+
+#descriptive statistics
+summary(pdf$LoanOriginalAmount)
+```
+
+The loans amount are between 0 and 35,000
+minimum loan is 1000$, 75% of loans are under 12,000
+
+
+### Borrowers Income
+
+Take alook at income range for prosper borrower.
+
+```{r Borrowers_Income}
+#plot imcome range
+
+# prepare plot label and title
+xlb1 <- 'Incomes Range($)'
+xlb2 <- 'Monthly Incomes($)'
+ylb1 <- 'Number of Borrower'
+til1 <- 'The Borrowers Incomes range'
+til2 <- 'The Borrowers Monthly Incomes'
+
+# create barplot
+p1 <-barplot(pdf, 
+             pdf$BorrowerIncomeRange, 
+             xlb1, 
+             ylb1, 
+             til1, 
+             -90)
+
+# set binwidth
+binwidth <- 1000
+
+# create histogram
+p2 <-hisplot(pdf, 
+             pdf$StatedMonthlyIncome, 
+             binwidth, 
+             xlb2, 
+             ylb1, 
+             til2, 
+             0) 
+
+# limit axis from long tail sample, 
+p2 <-p2 + xlim(0,
+               quantile(pdf$StatedMonthlyIncome, 
+                        0.99))
+
+# summary plot
+grid.arrange(p1, 
+             p2, 
+             ncol = 1)
+```
+
+
+#### Summary of Income range
+
+```{r Summary_Income_Range}
+#descriptive statistics
+summary(pdf$BorrowerIncomeRange)
+```
+
+Most of the borrowers have income ranging from $25,000 to $75,000, a few loans are had incomes below $25,000.
+
+
+#### Summary of Monthly Income
+
+```{r Summary_Monthly_Income}
+#descriptive statistics
+summary(pdf$StatedMonthlyIncome)
+```
+
+75% of borrower had the monthly incomes < 6,825, but the maximum is 1,750,000$, I think this is not make sense
+
+
+### DebtToIncomeRatio
+
+Check The ratio of debt to income for borrower
+
+```{r DebtToIncomeRatio}
+#plot debt to income
+
+
+# prepare plot label and title
+xlb1 <- 'Debt ratio'
+xlb2 <- 'Debt ratio[log10]'
+ylb1 <- 'Number of Borrower'
+til1 <- 'Distribution of Debt to Income ratio'
+til2 <- 'Distribution of Debt to Income ratio(log10)'
+
+# set binwidth
+binwidth1 <- 0.025
+binwidth2 <- 0.05
+
+# create histogram
+p1 <-hisplot(pdf, 
+             pdf$DebtToIncomeRatio, 
+             binwidth1, 
+             xlb1, 
+             ylb1, 
+             til1, 
+             0) 
+
+#limit axis, over 1 is long tail outlier
+p1 <- p1 + scale_x_continuous(limits = c(0, 1), 
+                              breaks = seq(0, 1, 0.1)) 
+
+# create histogram
+p2 <-hisplot(pdf, 
+             pdf$DebtToIncomeRatio, 
+             binwidth2, 
+             xlb2, 
+             ylb1, 
+             til2, 
+             0) 
+
+#limit axis, over 1 is long tail outlier
+p2 <- p2 + coord_cartesian(xlim = c(0.01,1))
+p2 <- p2 + scale_x_log10()
+
+#summary plot
+grid.arrange(p1, 
+             p2, 
+             ncol = 1)
+
+#descriptive statistics
+summary(pdf$DebtToIncomeRatio)
+```
+
+Almost borrowers have 22% in Debt compared with their income. 
+75% of the borrowers have debt less than 32% compared with their income
+
+
+### Prosper Credit Rating
+
+Investigate the rating of borrower
+
+```{r Proper_Credit_Rating}
+#plot credit rating
+
+# prepare plot label and title
+xlb1 <- 'Credit Rating'
+xlb2 <- 'Monthly Incomes($)'
+ylb1 <- 'Number of Loan'
+til1 <- 'The  Prosper Credit Rating'
+
+# create barplot
+barplot(pdf, 
+        pdf$CreditRating, 
+        xlb1, 
+        ylb1,
+        til1,
+        0)
+
+#descriptive statistics
+summary(pdf$CreditRating)
+```
+
+By ignore "N/A", most borrower made with rating C, B, A, and D by Prosper Rating.
+
+
+Now looking at investor information
+
+
+### Number of Investor
+
+How many investor who invested on prosper
+```{r Number_of_Investor}
+#histogram of Investors Per Loan
+
+# prepare plot label and title
+xlb1 <- 'Number of Investor'
+ylb1 <- 'Number of Loan'
+til1 <- 'The number of Loan and investor'
+
+# set binwidth
+binwidth <- 30
+
+# create histogram
+hisplot(pdf,
+        pdf$Investors, 
+        binwidth, 
+        xlb2, 
+        ylb1, 
+        til2, 
+        0) 
+
+#descriptive statistics
+summary(pdf$Investors)
+```
+
+The number of investors approximately lognormal distribution, a few investor who invest with huge loans.
+
+
+### Estimate Yield
+
+Check the yeild for investor
+```{r  Estimate_Yield}
+# Estimate Yield of investment
+
+# prepare plot title
+til1 <- 'The estimate loss yield'
+til1 <- 'The estimated return yield'
+
+# create ecfplot
+p1 <-ecfplot(pdf, 
+             pdf$EstimatedLoss, 
+             'black', 
+             til1) 
+p2 <-ecfplot(pdf, 
+             pdf$EstimatedReturn, 
+             'blue', 
+             til2) 
+
+#summary plot
+grid.arrange(p1, 
+             p2, 
+             ncol = 2)
+
+#descriptive statistics
+summary(pdf$EstimatedLoss)
+```
+
+
+#### Summary of Loss yield
+
+```{r Summary_of_Loss_yield}
+#descriptive statistics
+summary(pdf$EstimatedLoss)
+```
+
+
+#### Summary of Return yield
+
+```{r Summary_of_Return_yield}
+#descriptive statistics
+summary(pdf$EstimatedReturn)
+```
+
+Estimat loss and return for investor look like indentical 12% and 11%
+
+------
+
+# Univariate Analysis
+
+### What is the structure of your dataset?
+The dataset contains 81 variables about 113937 loans made through the prosper.com marketplace. 
+The loans cover the period 2005-11-15, 2014-03-12. 
+Variables are of classes int, numeric, date, and factor.
+
+### What is/are the main feature(s) of interest in your dataset?
+the main features of interest for me are the Lender Yield and Borrower Rate.
+I want to know what is the factors influencing to the Lender Yield and borrower rate.
+
+### What other features in the dataset do you think will help support your investigation into your feature(s) of interest?
+I'm interested in ProsperRating, CreditScore, IncomeRange, Term, DebtToIncomeRatio and LoanCategory may help to investigate the LenderYield and BorrowerRate. 
+
+### Did you create any new variables from existing variables in the dataset?
+I created a single CreditRange that represent the average of CreditScoreRangeUpper and CreditScoreRangeLower.  
+Also created a factor variable result of ListingCategory and TermInmounth variables.
+
+### Of the features you investigated, were there any unusual distributions? Did you perform any operations on the data to tidy, adjust, or change the form of the data? If so, why did you do this?
+The ListingCategory, IncomeRange features show unorder, I had reorder for better plot.
+I transformed StatedMonthlyIncome and DebtToIncomeRatio, which include long tail large value that seems outlier distribution.
+
+------
+
+# Bivariate Plots Section
+
+
+Next start explore the corelation between feature in the data set
+
+
+### Loan Category since Originatation
+
+Start with trend of loan category since loan originations
+
+```{r Loan_Category_since_Originatation}
+# prepare plot label and title
+xlb1 <- 'Loan Originated'
+ylb1 <- 'Loan Category'
+til1 <- 'Prosper Loan Category through FY2014'
+
+# create histogram
+binplot(Category_no_na, 
+        Category_no_na$QuarterPeriodOfLoan, 
+        Category_no_na$LoanCategory, 
+        xlb1,
+        ylb1,
+        til1,
+        -90) 
+```
+
+Since 2007 Prosper had seven categories of loan, until in 2011, they has expanded to additional 13 loan, 
+including all of 20 categories available for now
+
+
+### Term and Amount
+
+```{r Term_and_Amount}
+# prepare plot label and title
+xlb1 <- 'Length of the loan in months'
+ylb1 <- 'Loan Amount ($)'
+til1 <- 'Prosper Term and Loan Amount'
+
+# create boxplot
+boxplot(pdf, 
+        pdf$TermInMonth, 
+        pdf$LoanOriginalAmount, 
+        fil, 
+        gd, 
+        xlb1,
+        ylb1,
+        til1,
+        0) 
+```
+
+Small loan was prefer for short term and big loan prefer for long term.
+
+
+### Loan Category and Amount
+
+```{r Loan_Category_And_Loan_Amount}
+# prepare plot label and title
+xlb1 <- 'Loan Category'
+ylb1 <- 'Loan Amount ($)'
+til1 <- 'The Loan Category and Loan Amount'
+
+# create boxplot
+boxplot(pdf, 
+        pdf$LoanCategory, 
+        pdf$LoanOriginalAmount, 
+        fil, 
+        gd, 
+        xlb1,
+        ylb1,
+        til1,
+        -90) 
+```
+
+If exclude "Not Applicable", and "Other", the amount of lons for Home improvement and Baby&Adoption are majority choice on Prosper
+
+
+### Loan Status and Amount
+
+```{r Loan_status_and_Loan_amount}
+# prepare plot label and title
+xlb1 <- 'Loan Status'
+ylb1 <- 'Loan Amount ($)'
+til1 <- 'The Loan Amount by Status'
+
+# create boxplot
+boxplot(pdf, 
+        pdf$LoanStatus, 
+        pdf$LoanOriginalAmount, 
+        fil, 
+        gd, 
+        xlb1,
+        ylb1,
+        til1,
+        -90) 
+
+# summary the statistic
+totalAmount <- sum(pdf$LoanOriginalAmount)
+data.frame(LoanStatusAmount = pdf$LoanOriginalAmount, 
+           group = pdf$LoanStatus) %>%
+  group_by(group) %>%
+  summarise(sum   = sum(LoanStatusAmount), 
+            ratio = round( 100*sum(LoanStatusAmount)/totalAmount, 
+                           digit = 2))
+```
+
+Loan status look pretty good, past due < 2%
+
+
+### IncomeRange and LoanAmount
+
+```{r IncomeRange_and_LoanAmount}
+# prepare plot label and title
+xlb1 <- 'Monthly Income Range'
+ylb1 <- 'Loan Amount ($)'
+til1 <- 'The Loan amount by Borrower Income Range'
+
+# create boxplot
+boxplot(pdf,
+        pdf$BorrowerIncomeRange,
+        pdf$LoanOriginalAmount, 
+        fil, 
+        gd, 
+        xlb1,
+        ylb1,
+        til1,
+        -90)
+# check corelation
+cor.test(pdf$StatedMonthlyIncome, 
+         pdf$LoanOriginalAmount)
+```
+
+Higher income borrower who can made higher loan amound, this may related payment possiblity.
+
+
+### Home owner and Credit Score
+
+```{r CreditScore_and_IsBorrowerHomeowner}
+# prepare plot label and title
+xlb1 <- 'Is Borrower Home owner'
+ylb1 <- 'Credit Score'
+til1 <- 'The Credit Score by Home owner'
+
+# create boxplot
+boxplot(pdf,
+        pdf$IsBorrowerHomeowner,
+        pdf$CreditScoreRange,
+        fil,
+        gd, 
+        xlb1,
+        ylb1,
+        til1,
+        -90) 
+```
+
+Look seem Credit score for home owner high than not own the home
+
+
+### CreditRating and Term
+
+The number of loan by term and credit rating
+
+```{r CreditRating_and_TermInMonth}
+# create frequency plot of CreditRating by term
+ggplot(data = CRating_no_na, 
+       aes(x = TermInMonth, 
+           color = CreditRating)) + 
+  geom_freqpoly(aes(group = CreditRating), 
+                stat="count") +
+  xlab('Length of the loan in months') +
+  ylab('Number of loan') +
+  ggtitle('Number of loan by term and credit rating')
+
+```
+
+36 month loan is the majority selection for all credit rating borrower.
+The investor may need to focus to putting their money this these loan peroid.
+
+
+### CreditRating and IncomeRange
+
+```{r CreditRating_and_IncomeRange}
+# create frequency plot of CreditRating by IncomeRange
+ggplot(data = CRating_no_na, 
+       aes(x = BorrowerIncomeRange, 
+           color = CreditRating)) + 
+  geom_freqpoly(aes(group = CreditRating), 
+                stat="count") +
+  theme(axis.text.x = element_text(angle = -90)) +
+  xlab('Income Range') +
+  ylab('Number of loan') +
+  ggtitle('Number of loan by Income range and credit rating')
+```
+
+The most borrower on prosper had income range between 25000$ - 100000$ which rating from AA-HR
+Most excellent rating (B-AA) borrower income range over 75000$
+also most poor rating (D -HR) borrower income range between 25000$ - 50000$ 
+
+
+### Credit Rating and CreditScore
+
+```{r Credit_Rating_and_Credit_Score}
+# prepare plot label and title
+xlb1 <- 'Credit Rating'
+ylb1 <- 'Credit Score'
+til1 <- 'Proper Rating and Credit Score'
+
+# create boxplot
+p1 <-boxplot(CRating_no_na, 
+             CRating_no_na$CreditRating,
+             CRating_no_na$CreditScoreRange,
+             fil,
+             gd,
+             xlb1,
+             ylb1,
+             til1,
+             0) 
+
+# set limit
+p1 + coord_cartesian(ylim = c(600,  900))
+
+cor.test(pdf$ProsperRatingScore, 
+         pdf$CreditScoreRange)
+```
+
+High Credit Score is assign to excellent rating (AA), and surprise is Poor prosper rating "HR" have high credit score that rating E
+
+
+### Credit Score and CurrentDelinquencies
+
+```{r CreditScore_and_CurrentDelinquencies}
+# prepare plot label and title
+xlb1 <- 'Credit Score'
+ylb1 <- 'Number of Delinquent'
+til1 <- 'Credit Score and Number of Delinquent'
+
+#create jitter plot
+p1 <-jitterplot(pdf,
+                pdf$CreditScoreRange, 
+                pdf$CurrentDelinquencies,
+                alpha,
+                col, 
+                xlb1, 
+                ylb1, 
+                til1, 
+                0) 
+
+# set xlimit and flip axis
+p1 <- p1 +  xlim(400, 900)
+p1 + coord_flip()
+  
+# correlation tets
+cor.test(pdf$CurrentDelinquencies, 
+         pdf$CreditScoreRange)
+```
+
+Delinquencies count seem tobe relation with the Credit score, low credit score borrower who increasing chance to made high delinquencies.
+
+
+### Credit Rating, and Interest
+
+```{r Credit_Rating_Risk_and_Interest}
+# prepare plot label and title
+xlb1 <- 'Credit Rating'
+ylb1 <- 'Interest Rate'
+til1 <- 'The Interest Rate by Credit Rating on Prosper.com'
+
+# create boxplot
+boxplot(CRating_no_na,
+        CRating_no_na$CreditRating,
+        CRating_no_na$BorrowerRate,
+        fil,
+        gd, 
+        xlb1,
+        ylb1,
+        til1,
+        0) 
+
+# summary interest by rating
+with(pdf, by(BorrowerRate,
+             CreditRating,
+             summary))
+# correlation tets
+cor.test(pdf$ProsperRatingScore, 
+         pdf$BorrowerRate)
+```
+
+The excellent rating is AA and is lower risk and then make lower interest.
+In the other hand, poor rating is HR that high risk, so reqire hig interest too.
+
+
+### Loan amount and Interest
+
+```{r Loan_amount_and_Interest}
+# prepare plot info
+alpha <- 0.05
+
+# prepare plot label and title
+xlb1 <- 'Loan Amount ($)'
+ylb1 <- 'Interest Rate'
+til1 <- 'The Interest Rate and Loan Amount'
+
+# create jitter plot
+jitterplot(pdf,
+           pdf$LoanOriginalAmount, 
+           pdf$BorrowerRate,
+           alpha,
+           col, 
+           xlb1, 
+           ylb1, 
+           til1, 
+           0) 
+
+# corelation test
+cor.test(pdf$BorrowerRate, 
+         pdf$LoanOriginalAmount)
+```
+
+Small loan make high interest than bigger loan, this related to length of loan.
+
+
+### Home Owner and Interest
+
+```{r HomeOwner_and_Interest}
+# create box plot of Home Owner and Interest
+
+# prepare plot label and title
+xlb1 <- 'IsHomeowner'
+ylb1 <- 'Interest Rate'
+til1 <- 'The Interest Rate by Home Owner'
+
+# create boxplot
+boxplot(pdf,
+        pdf$IsBorrowerHomeowner,
+        pdf$BorrowerRate,
+        fil,
+        gd, 
+        xlb1,
+        ylb1,
+        til1,
+        0) 
+
+```
+
+Borrower who home owner had receive small interest than other one who not own the home.
+
+Now look at investor sode
+
+
+### Investor and Term
+
+```{r Investor_and_TermInMonth}
+# create box plot of borrower rate
+
+# prepare plot label and title
+xlb1 <- 'Term of invesment in months'
+ylb1 <- 'Number of investor'
+til1 <- 'The investor by investment term'
+
+# create boxplot
+boxplot(pdf,
+        pdf$TermInMonth,
+        pdf$Investors,
+        fil,
+        gd, 
+        xlb1,
+        ylb1,
+        til1,
+        0) 
+
+```
+Mostt investment term on propser.com are 36 and 60 months .
+
+
+### Investor and Lender yield
+
+```{r Investor_and_Lender_Yield}
+# create plot Investor and Lender yield
+
+# prepare plot info
+alpha <- 0.1
+
+# prepare plot label and title
+xlb1 <- 'Number of Investor'
+ylb1 <- 'Lender Yield'
+til1 <- 'The Investors Lender Yield'
+
+jitterplot(pdf,
+           pdf$Investors, 
+           pdf$LenderYield,
+           alpha,
+           col, 
+           xlb1,
+           ylb1,
+           til1,
+           0) 
+
+# correlation tets
+cor.test(pdf$Investors, 
+         pdf$LenderYield)
+```
+
+There are few investors who made higher yield not much correlation between these two variables. negative correlation -0.27
+
+------
+
+# Bivariate Analysis
+
+### Talk about some of the relationships you observed in this part of the investigation. How did the feature(s) of interest vary with other features in the dataset?
+For the borrower, BorrowerRate depend on CreditRating, Income, Term and Loand Amount.
+For Investor the retrun depend on BorrowerRate Term and Amount of their funded.
+
+### Did you observe any interesting relationships between the other features (not the main feature(s) of interest)?
+I also observe when the borrower who are home owner, they average interest rate is smaller.
+
+### What was the strongest relationship you found?
+I found the strongest relationshipbetween CreditRating and BorrowerRate (0.95).  
+
+------
+
+# Multivariate Plots Section
+
+This section, main objective is to see how the observed relationships from the previous section.
+
+```{r getRoi}
+## create helper plot function
+
+## calculate return of investment
+# param:
+#       LP_Fees  : LP_InterestandFees
+#       LP_Loss  : LP_GrossPrincipalLoss
+#       LP_SFees : LP_ServiceFees
+#       LP_CFees : LP_CollectionFees
+#       Amount   : LoanOriginalAmount
+# return plot object
+getRoi <-function(lp_fees,
+                  lp_loss, 
+                  lp_sfee,
+                  lp_cfee, 
+                  amount) 
+{
+  p <- (lp_fees - lp_loss - lp_sfee - lp_cfee) / amount
+  return(p)
+}
+```
+
+```{r Summarizing_loan_Stuatus}
+
+# create lable
+pastlbl <- c("Past Due (>120 days)",
+             "Past Due (1-15 days)",
+             "Past Due (16-30 days)",
+             "Past Due (31-60 days)",
+             "Past Due (61-90 days)",
+             "Past Due (91-120 days)"
+             )
+
+complbl <- c("Current",
+             "FinalPaymentInProgress"
+             )
+
+statuslbl <- c("Cancelled",
+               "Chargedoff",
+               "Defaulted", 
+               "Past Due", 
+               "Current", 
+               "Completed"
+               )
+
+pdf <- pdf %>% 
+  mutate(LoanResult = 
+           ifelse(LoanStatus == 'Cancelled', 
+                  0,
+                  ifelse(LoanStatus == 'Chargedoff', 
+                         1,
+                         ifelse(LoanStatus == 'Defaulted', 
+                                2,
+                                ifelse(LoanStatus  %in% pastlbl, 
+                                       3,
+                                       ifelse(LoanStatus  %in% complbl, 
+                                              4, 
+                                              5)
+                                       )
+                                )
+                         )
+                  )
+         )
+
+pdf$LoanResult <- factor(pdf$LoanResult, 
+                         levels = 0:5, 
+                         labels = statuslbl)
+```
+
+
+### Category of Loan
+
+```{r Loan_By_Category, fig.width=8, fig.height=12}
+# create a new variable summarizing the result of ByCategory
+ByCategory <- pdf %>%
+  group_by(QuarterPeriodOfLoan, 
+           LoanCategory,
+           TermInMonth) %>%
+  summarise(LoanAmount = sum(LoanOriginalAmount), 
+            CountLoanAmount = n()) %>%
+  arrange(desc(LoanAmount, 
+               CountLoanAmount))
+
+# exclude Not Available from dataset
+ByCategory_exc_na <- subset(ByCategory,
+                            !(LoanCategory == "Not Available"))
+
+# include only Not Available from dataset
+ByCategory_only_na <- subset(ByCategory,
+                             (LoanCategory == "Not Available"))
+
+# plot histogram
+ p1 <-ggplot(data = ByCategory_exc_na, 
+             aes(x = QuarterPeriodOfLoan,
+                 y = LoanAmount/1000000,
+                 fill = LoanCategory)) + 
+    geom_bar(stat = 'identity') +
+    theme(axis.text.x = element_text(angle = -90)) +
+    xlab('Loan Originated Year') +
+    ylab('Loan Amount (Million $)') +
+    ggtitle("Total Loan amount exclude 'Not Available' through FY2014")
+ 
+  p2 <-ggplot(data = ByCategory_only_na,
+              aes(x = QuarterPeriodOfLoan,
+                  y = LoanAmount/1000000,
+                  fill = LoanCategory)) + 
+    geom_bar(stat = 'identity') +
+    theme(axis.text.x = element_text(angle = -90)) +
+    xlab('Loan Originated Year') +
+    ylab('Loan Amount (Million $)') +
+    ggtitle("Total Loan amount of 'Not Available' through FY2014")
+  
+grid.arrange(p1, p2, ncol = 1)
+```
+
+The total amount are growth up continuous over the time, especially since year 2013, the loan amount growth over 300%
+Consider on loan type that not avialable have double growth ration over time.
+The purpose of the loan are to be used for improve the quality of life rather than entertainment.
+The top three loan type are for Auto, Debt consolidation.
+
+
+### Interest Amount Income Rating
+
+```{r Interest_Amount_Income_and_Rating}
+# create jitter plot
+ggplot(data = subset(DTIR_no_na, 
+                     !is.na(CreditRating)), 
+       aes(x = BorrowerRate,
+           y = LoanOriginalAmount, 
+           color = CreditRating)) +
+  geom_jitter(alpha = 0.5) +
+  facet_wrap(~BorrowerIncomeRange) +
+  scale_x_continuous(limits = c(0, 0.4)) +
+  xlab("Interest Rate") +
+  ylab("Loan Amount ($)") + 
+  ggtitle("Loan Amount and Interest by Credit Rating and Income")
+```
+
+Borrower who had more income they increase a chance to increase their CreditRating and can lend more money with better interest.
+
+
+### Lender Yield for Investor by Term and Categories
+
+```{r LenderYield_Term_and_Categories}
+# create plot
+ggplot(data = Category_no_na,
+       aes(x = LenderYield,
+           y = Investors)) +
+  geom_jitter(alpha = 0.5, 
+              size  = 2, 
+              position = 'jitter',
+              aes(color = LoanCategory)) +
+  facet_wrap(~TermInMonth, ncol = 3) +
+  xlab("Lender yield") +
+  ylab("Number of Investor") +
+  ggtitle("Lender yeld by Term and Categories")
+```
+
+36 month term make better investment yield for investor.
+
+
+### Lender Yield by Rating 
+
+```{r LenderYield_and_CreditRating}
+# create plot of since FY2009
+ggplot(data = CRating_no_na,
+       aes(x = QuarterPeriodOfLoan, 
+           y = LenderYield)) +
+  stat_smooth(aes(y = LenderYield,
+                  group = CreditRating, 
+                  colour = CreditRating), 
+              method = "lm", 
+              formula = y ~ poly(x,5),
+              level= 0.95) +
+  theme(axis.text.x = element_text(angle = -90)) +
+  #facet_wrap(~TermInMonth, ncol = 1) +
+  xlab("Originated Year") +
+  ylab("Lender yield") +
+  ggtitle("Lender yield by Term and Credit Rating")
+
+```
+
+The lender yield are explicitly different for each Credit Rating.
+Excellent rating borrower made low return but high return made by poor rating borrower
+
+
+### Investor yield by Term
+
+```{r Investor_Yield_and_Term}
+# create plot of since FY2009
+ggplot(data = subset(pdf, !is.na(EstimatedEffectiveYield)),
+       aes(x = Investors,
+           y = EstimatedEffectiveYield)) +
+  geom_jitter(alpha = 0.5, 
+              size = 2, 
+              position = 'jitter',
+              aes(color = TermInMonth)) +
+  facet_wrap(~PeriodOfLoan, ncol = 3) +
+  xlab("Number of Investor") +
+  ylab("EstimatedEffectiveYield") +
+  ggtitle("Estimated Yield of Investor by Term and through FY2014")
+```
+This plot show since FY2011 most investor have no loss for theire investment.
+The most investment term is 36 and 60 mounth,  and from FY2014 there is no investment fro short term.
+
+------
+
+# Multivariate Analysis
+
+### Talk about some of the relationships you observed in this part of the investigation. Were there features that strengthened each other in terms of looking at your feature(s) of interest?
+The Most Popular Loan is 36 months for all credit rating. 
+The Lender Yield is gradually increasing from decreaseing Credit of borrower
+
+### Were there any interesting or surprising interactions between features?
+My interesting that the ratio of BorrowerRate and CreditRating that explicitly different
+
+### OPTIONAL: Did you create any models with your dataset? Discuss the strengths and limitations of your model.
+I did not create a model for my dataset.
+
+------
+
+# Final Plots and Summary
+
+### Plot One
+
+```{r Plot_One}
+# create a new variable summarizing the result of ByStatus
+ByResult <- pdf %>% group_by(QuarterPeriodOfLoan,
+                                    LoanResult,
+                                    CreditRating,
+                                    BorrowerIncomeRange) %>%
+  summarize(LoanCount = n()/1000) %>% 
+  arrange(CreditRating, LoanResult)
+
+# plot histogram
+ggplot(data = ByResult,
+       aes(x = QuarterPeriodOfLoan, 
+           y = LoanCount,
+           fill = LoanResult)) +
+  geom_bar(stat = 'identity') +
+  theme(axis.text.x = element_text(angle = -90)) +
+  xlab("Originated Year") +
+  ylab("Number of Loan (x1000)") + 
+  ggtitle("Prosper Loan Status through FY2014")
+
+```
+
+Loan Status by percentage since originated throug FY2017
+
+```{r Percentage_Result}
+# percentage of loan status by quater year
+Resulttable <- table(pdf$LoanResult, 
+                     pdf$QuarterPeriodOfLoan) 
+PercentageResult <-prop.table(Resulttable, 2) 
+PercentageResult <-format(round(PercentageResult, 2)*100, nsmall = 2)
+
+print(PercentageResult)
+```
+
+### Description One
+
+The demand of loan had growth rapidly year by year since FY2011.
+This plot show the loans status on Prosper.com over 99%(as of FY 2009) are "Current" status.
+Since originated year the ratio of bad loan (Cancelled, Chargedoff, efaulted and Past Due) 
+Look seem too high ratio ~30-40% during 2006-2008 and there are improve after 2009, and right now the loan status are so good.
+ratio of bad loan small than 3% since 2013 till now(Q1/2014)
+Any way, one of intersting is the result of complete status show dedreasing every year, as of  2014 complete ratio remaining 1% of result.
+
+
+### Plot Two
+
+```{r Plot_Two}
+# create stat smooth plot
+ggplot(data = CRating_no_na,
+       aes(x = LoanOriginalAmount, 
+           y = BorrowerRate)) +
+  stat_smooth(aes(y = BorrowerRate,
+                  group = CreditRating, 
+                  colour = CreditRating), 
+              method = "lm", 
+              formula = y ~ poly(x,5),
+              level= 0.95) +
+  facet_wrap(~PeriodOfLoan, ncol = 1) +
+  xlab("Loan Amount ($)") + 
+  ylab("Interest rate") +
+  ggtitle("Interest Rate and Loan amount by Credit Rating through FY2014")
+```
+
+Summary of Interest rate by credit rating
+
+```{r Plot_Two_Interest_summary_by_credit}
+with(CRating_no_na, by(BorrowerRate, CreditRating, summary))
+```
+
+Summary of loan amount by credit rating
+
+```{r Plot_Two_loan_amount_summary_by_credit}
+with(CRating_no_na, by(LoanOriginalAmount, CreditRating, summary))
+```
+
+
+### Description Two
+
+This chart shows the relationship of interest rates and loans on www.prosper.com
+Prosper offering interest rates in range as 4-40%  while loans are in the range 1000-35000 $.
+The interest rate and loan amount depend on the borrower's credit rating. 
+We observed that the interest rate for excellent credit borrower's are typically lower than the borrower who get poor credit rating.
+By considering borrowers who had excellent - very good (A-AA) credit, 
+they have opportunity to receive interest rate between 4-20% and can borrow in range 1000-35000 $.
+And for the borrowers with poor credit ratings - moderate (HR-B) to the interest rate will be in the range of 10-40% and be able to borrow between 1000-35000 $ for the borrowers with moderate credit ratings (C-B)  and from $ 1000-17000 for the borrower with the poor credit.
+However, up to the limit in trouble for something else, such as the term of loan, type of loan, etc.
+
+
+### Plot Three
+
+```{r Plot_Three}
+# create a new variable of investment return
+roi <-getRoi(pdf$LP_InterestandFees,
+             pdf$LP_GrossPrincipalLoss,
+             pdf$LP_ServiceFees,
+             pdf$LP_CollectionFees,
+             pdf$LoanOriginalAmount) 
+
+pdf <- pdf %>% mutate(NetROI = 100*roi)
+
+ByNetROI = subset(pdf, !is.na(CreditRating))
+
+# create line plot
+ggplot(data = ByNetROI,
+       aes(x = QuarterPeriodOfLoan,
+           y = NetROI,
+           color = CreditRating)) +
+  geom_line(aes(y = NetROI,
+                group = CreditRating),
+            stat  = "summary", 
+            fun.y = median) +
+  facet_grid(~TermInMonth) +
+  theme(axis.text.x = element_text(angle = -90)) +
+  xlab("Originated Year") +
+  ylab("% Net ROI") +
+  ggtitle("Return on Investment (ROI) by Term and Credit Rating")
+```
+
+### Description Three
+
+This plot shows that the borrower have generated impressive profits on prosper.com since 2009-2012 , 
+we can see the ROI for 12-month short-term investment generated return ~ 4-10%, 
+and or medium-term loans as 36 months, the return is 10-40%, and long-term loans for 60 months also made very hig return up to 20-60%. 
+The return is much higher when ther borrower has a poor credit rating.
+Any way, after the year 2013, the return on investment fell for all loan team in all credit rating, 
+especially in 2014 the return on investment declined sharply.
+
+
+------
+
+# Reflection
+
+The Prosper dataset has 113,937 record with 81 variables. 
+I started by looking at the documentation and tried to selected  10-15 interesting variables and planed to use various plots to check and explain the reationship betweeen them.
+The difficulties I had with the data mainly stemmed from understanding the variables from this dataset and asking interesting questions, then planned selecting the appropriate technique to analyze. 
+From my analyze I found the factor that will make to the borrower get lower interest is to make the excellent credit ratinng by increase increasign income, lower debt ratio or how the home.
+For investor the make high return they may explore the investment to these state such as  Mississippi, Oregon, Iowa, Nebraska, North Dakota, Indiana, Ohio.
+
+To continue from here, I would like to make a predictive model to compare against the data. I am looking forward to learning more about modeling and predictions in the Machine Learning class.
+
+------
+
+### Reference
+1. https://www.prosper.com
+2. https://stat.ethz.ch/R-manual/R-devel/library/base/html/names.html
+3. http://www.r-bloggers.com/rmaps-mexico-map/
+4. https://www.nceas.ucsb.edu/~frazier/RSpatialGuides/colorPaletteCheatsheet.pdf
+5. https://en.wikipedia.org/wiki/Credit_score_in_the_United_States#FICO_score
+6. http://www.creditcards.com/credit-card-news/credit-score-statistics.php
+7 .http://ggplot.yhathq.com/docs/geom_line.html
