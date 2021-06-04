@@ -30,5 +30,5 @@ the goal is to implement modelsector and feature engineering to train a set of H
 ## Project-5: [Dog Breed Classifier](https://github.com/knopthakorn/Udacity-course/tree/master/AIND/AIND-Dog-Breed-Classifier)
 In this project, you will learn how to build a pipeline that can be used within a web or mobile app to process real-world, user-supplied images. Given an image of a dog, your algorithm will identify an estimate of the canine’s breed. If supplied an image of a human, the code will identify the resembling dog breed.
 
-## Project-6: [Dog Breed Classifier](https://github.com/knopthakorn/Udacity-course/tree/master/AIND/AIND-CV-FacialKeypoints)
+## Project-6: [Facial Keypoints Detection](https://github.com/knopthakorn/Udacity-course/tree/master/AIND/AIND-CV-FacialKeypoints)
 In this project, you’ll combine your knowledge of computer vision techniques and deep learning to build and end-to-end facial keypoint recognition system. Facial keypoints include points around the eyes, nose, and mouth on any face and are used in many applications, from facial tracking to emotion recognition.
